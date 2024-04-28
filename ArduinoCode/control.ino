@@ -11,7 +11,7 @@ Servo servoAlpha; //Vertial servo
 Servo servoTheta; //Horizontal servo
 
 SoftwareSerial mySerial(10, 11); //Defines the TFMini TX pin and TFMini RX pin
-TFMini tfmini; //Object fpr the LiDAR sensor
+TFMini tfmini; //Object for the LiDAR sensor
 
 int dist; //holds the distance(in cm)
 int i;
