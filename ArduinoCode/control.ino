@@ -21,7 +21,8 @@ int angle;
 int verAngle; 
 int verAngleStop;
 int angleFrom; 
-int angleTo; 
+int angleTo;
+int mapAngle;
 
 
 void setup()
@@ -30,8 +31,8 @@ void setup()
 	Serial3.begin(115200);
 	mySerial.begin(TFMINI_BAUDRATE);
 	tfmini.begin(&mySerial);
-	servoAlpha.attach(9);
-	servoTheta.attach(10);
+	servoAlpha.attach(9); // attaches the vertical servo on pin 9 to the servo object
+	servoTheta.attach(10); // attaches the horizontal servo on pin 10 to the servo object
 	
 	//Horizontal Servo motion on startup
 	servoTheta.writeMicroseconds(2000);//left
@@ -54,8 +55,8 @@ void setup()
 void loop()
 {
 	
-	if (verAngle >= verAngleStop) {
-
+	if (verAngle >= verAngleStop) 
+	{
 		for (angle = angleFrom; angle <= angleTo; angle += 7)
 		{
 		  pointArray[2] = SmoothLidarReading();
@@ -82,8 +83,10 @@ void loop()
     }
 }
 
-void MoveUp() {
-  if (verAngle >= verAngleStop) {
+void MoveUp() 
+{
+  if (verAngle >= verAngleStop) 
+  {
     verAngle = verAngle - 7;
     servo2.writeMicroseconds(verAngle);
     mapVerAngle = verAngle;
@@ -96,16 +99,18 @@ void MoveUp() {
 int LidarReading()
 {
 	dist = tfmini.getDistance();
-	delay(10)
+	delay(10);
 	return dist;
 }
 
 float SmoothLidarReading()
 {
 	float averageDist = 0;
-	for (int i = 0; i < SAMPLES; i = i + 1) {
+	for (int i = 0; i < SAMPLES; i = i + 1) 
+	{
 		int x = float(LidarReading());
-		while (x < LIDAR_MIN_DIST || x > LIDAR_MAX_DIST) {
+		while (x < LIDAR_MIN_DIST || x > LIDAR_MAX_DIST) 
+		{
 		  x = float(LidarReading());
 		}
 		averageDist = averageDist + x;
@@ -114,10 +119,13 @@ float SmoothLidarReading()
   return averageDist;
 }
 
-void printArray() {
-  for (int i = 0; i < 3; i++) {
+void printArray() 
+{
+  for (int i = 0; i < 3; i++)
+  {
     Serial.print(pointArray[i]);
-    if (i != 2) {
+    if (i != 2) 
+    {
       Serial.print(" ");
     }
   }
