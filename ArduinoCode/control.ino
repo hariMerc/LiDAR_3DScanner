@@ -1,19 +1,24 @@
 #include<Servo.h>
 #include<SoftwareSerial.h>
-#include "TFMini.h"
+
 
 #define LIDAR_MIN_DIST 20
 #define LIDAR_MAX_DIST 800 // in cm
 #define SAMPLES 5
 
+SoftwareSerial Serial1(2,3); //define software serial port name as Serial1 and define pin2 as RX and pin3 as TX
+int dist; //actual distance measurements of LiDAR
+int strength; //signal strength of LiDAR
+float temprature;
+int check;  //save check value
+int i;
+int uart[9];  //save data measured by LiDAR
+const int HEADER=0x59;  //frame header of data package
+
 
 Servo servoAlpha; //Vertial servo
 Servo servoTheta; //Horizontal servo
 
-SoftwareSerial mySerial(10, 11); //Defines the TFMini TX pin and TFMini RX pin
-TFMini tfmini; //Object for the LiDAR sensor
-
-uint16_t dist; //holds the distance(in cm)
 int i;
 int pointArray[3]; //Holds the 0. hAngle 1. vAngle 2. distance
 
@@ -27,10 +32,8 @@ int mapAngle;
 
 void setup()
 {
-	Serial.begin(115200);
-	Serial3.begin(115200);
-	mySerial.begin(TFMINI_BAUDRATE);
-	tfmini.begin(&mySerial);
+	Serial.begin(9600); //set bit rate of serial port connecting Arduino with computer
+  	Serial1.begin(115200);  //set bit rate of serial port connecting LiDAR with Arduino
 	servoAlpha.attach(9); // attaches the vertical servo on pin 9 to the servo object
 	servoTheta.attach(10); // attaches the horizontal servo on pin 10 to the servo object
 	
@@ -98,9 +101,26 @@ void MoveUp()
 
 int LidarReading()
 {
-	dist = tfmini.getDistance();
-	delay(10);
-	return dist;
+	if (Serial1.available())
+	{  //check if serial port has data input
+    	if(Serial1.read() == HEADER) 
+	{  //assess data package frame header 0x59
+      		uart[0]=HEADER;
+      	if (Serial1.read() == HEADER) 
+      	{ //assess data package frame header 0x59
+        uart[1] = HEADER;
+        for (i = 2; i < 9; i++) { //save data in array
+          uart[i] = Serial1.read();
+        }
+        check = uart[0] + uart[1] + uart[2] + uart[3] + uart[4] + uart[5] + uart[6] + uart[7];
+        if (uart[8] == (check & 0xff))
+	{ //verify the received data as per protocol
+          dist = uart[2] + uart[3] * 256;     //calculate distance value
+         return dist;
+        }
+      }
+    }
+  }
 }
 
 float SmoothLidarReading()
