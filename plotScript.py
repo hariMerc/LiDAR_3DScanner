@@ -1,3 +1,11 @@
+'''
+    This python code reads the r, theta, phi values sent by the esp32 and converts the values to
+    x, y, and z and stores them into a .PCD file.
+'''
+
+
+
+
 import serial.tools.list_ports
 import numpy as np
 import open3d as o3d
