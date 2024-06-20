@@ -1,13 +1,13 @@
 import serial.tools.list_ports
 import numpy as np
-import csv
-import time
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+import open3d as o3d
+from datetime import datetime
 
-
-
-fieldnames = ["x_val", "y_val", "y_val"]
+pc = o3d.geometry.PointCloud()
+current_date_time = datetime.now()
+filename ='Scan'+current_date_time.strftime("%Y%m%d_%H%M")+'.pcd'
+fields = ["x_val", "y_val", "z_val"]
+cartCoordList = []
 
 ports = serial.tools.list_ports.comports()
 
@@ -30,34 +30,15 @@ serialInst.baudrate = 115200
 serialInst.open()
 
 while True:
-
-    #Sends command to Arduino to begin or end a scan
-    command = input("Begin Scan(Y/N): ").lower()
-    serialInst.write(command.encode('utf-8'))
-
-    if command == 'exit':
-        exit()
-    #Reads the data sent by arduino 
     if serialInst.in_waiting:
         packet = serialInst.readline()
-        """Checks if the correct three order of numbers have been received and stores them
-            into a list.  
-        """
-        if packet.startswith('#') and packet.endswith('#'):
-          data_string = packet[1:-1]
-          coordListSpherical = data_string.strip().split(',')
-          x_val = coordListSpherical[0]*np.sin(coordListSpherical[1])*np.cos(coordListSpherical[2])
-          y_val = coordListSpherical[0]*np.sin(coordListSpherical[1])*np.sin(coordListSpherical[2])
-          z_val = coordListSpherical[0]*np.cos(coordListSpherical[1])
+        data_string = packet.decode('utf-8')[1:-1]
+        coordListSpherical = [float(x) for x in packet.decode('utf-8').strip().split(',')]
 
-          with open('data.csv', 'a') as csv_file:
-            csv_writer = csv.DictWriter(csv_file, fieldnames = fieldnames)
+        x_val = coordListSpherical[0] * np.sin(coordListSpherical[2]*(np.pi/180)) * np.cos(coordListSpherical[1]*(np.pi/180))
+        y_val = coordListSpherical[0] * np.sin(coordListSpherical[2]*(np.pi/180)) * np.sin(coordListSpherical[1]*(np.pi/180))
+        z_val = coordListSpherical[0] * np.cos(coordListSpherical[2]*(np.pi/180))
+        point = [x_val, y_val, z_val]
+        pc.points.append(point)
 
-            info = {
-                
-                    "x_val":x_val,
-                    "y_val":y_val,
-                    "z_val":z_val,
-            }
-
-            csv_writer.writerow(info)
+        o3d.io.write_point_cloud(filename, pc)
